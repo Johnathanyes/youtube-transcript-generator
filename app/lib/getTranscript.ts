@@ -16,10 +16,8 @@ export const getTranscript = async (video_link: string): Promise<string> => {
         const uncleaned_transcript = transcriptData.map((object) => object.text).join(" ");
 
         const cleaned_transcript = replaceHtmlEntities(uncleaned_transcript);
-
-        const token_length_estimate = estimateTokenCount(cleaned_transcript);
-        console.log(cleaned_transcript);
         
+        const token_length_estimate = estimateTokenCount(cleaned_transcript);
         return cleaned_transcript;
     } catch (error) {
         throw error;
