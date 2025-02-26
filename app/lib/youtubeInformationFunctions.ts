@@ -20,7 +20,7 @@ export const retrieveVideoId = async (videoId:string):Promise<string> => {
     throw new Error;
 }
 
-export const getVideoTitle = async (videoId: string):Promise<string | null> => {
+export const getVideoData = async (videoId: string) => {
     try {
         const response = await axios.get(
             `https://www.googleapis.com/youtube/v3/videos`,
@@ -32,11 +32,10 @@ export const getVideoTitle = async (videoId: string):Promise<string | null> => {
                 }
             }
         )
-        const items = response.data.items;
-        if (items.length > 0) {
-            return items.snippet.title;
+        const items = response.data.items[0];
+        if (items != null) {
+            return items;
         }
-
         return null;
     } catch (error) {
         throw new Error("Could not get video title");
