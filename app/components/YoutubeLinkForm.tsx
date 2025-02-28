@@ -30,27 +30,38 @@ export default function YouTubeLinkForm() {
       }
       setLink(form_link);
 
-      const transcript = await getTranscript(form_link);
-      const chunkedTranscript = await chunkTranscript(transcript);
+      const transcript = "asdfasdfasdf";
+      const chunkedTranscript = ["asdf", "asdfadsf"];
 
       const youtubeId = await retrieveVideoId(form_link);
       const youtubeData = await getVideoData(youtubeId);
-      const summary = await generateSummary(chunkedTranscript);
-      let youtubeTitle = null;
-      let youtubeChannel = null;
-      let youtubeThumbnail = null;
+      const summary = "baka";
 
-      if (youtubeData != null) {
-        youtubeTitle = youtubeData.snippet.title;
-        youtubeChannel = youtubeData.snippet.channelTitle;
-        youtubeThumbnail = youtubeData.snippet.thumbnails.high.url;
+      if (!youtubeData) {
+        setError("Failed to retrieve YouTube video data.");
+        return;
       }
-      console.log(youtubeId);
-      console.log(summary);
-      console.log(youtubeTitle);
-      console.log(youtubeChannel);
-      console.log(youtubeThumbnail);
-      
+  
+      const videoTitle = youtubeData.snippet.title;
+      const videoChannel = youtubeData.snippet.channelTitle;
+      const videoThumbnail = youtubeData.snippet.thumbnails.high.url;
+
+      const response = await fetch("/api/storeSummary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          videoId: youtubeId,
+          videoTitle,
+          videoUrl: form_link,
+          videoChannel,
+          videoThumbnail,
+          summary,
+          transcriptChunks: chunkedTranscript,
+        }),
+      });
+
     } catch (error) {
       // Capture the error message to display to the user
       console.error(error);

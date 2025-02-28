@@ -71,6 +71,8 @@ model VideoSummary {
   videoId          String   @unique // YouTube video ID
   videoTitle       String
   videoUrl         String
+  videoChannel     String
+  videoThumbnail   String
   summary          String? // Store final summary
   transcriptChunks String[] // List of whole transcript parts
   createdAt        DateTime @default(now())

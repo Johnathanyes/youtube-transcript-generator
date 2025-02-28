@@ -1,6 +1,7 @@
 "use client"
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 
 import React from 'react'
 
@@ -20,7 +21,7 @@ const NavBar = () => {
         <div>
           <h1>Welcome, {session!.user!.name}!</h1>
           <p>Email: {session!.user!.email}</p>
-          <img src={session!.user!.image!} alt="Profile Picture" />
+          <Image src={session?.user.image!} width={50} height={50} alt="User Avatar Image"></Image>
           <button onClick={() => signOut()}>Log Out</button>
         </div>
       );
