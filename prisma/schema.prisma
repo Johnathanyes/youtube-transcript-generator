@@ -52,7 +52,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   VideoSummary  VideoSummary[]
-
+  chatMessages  ChatMessage[] // One user can have multiple chat messages
   @@map("users")
 }
 
@@ -67,7 +67,7 @@ model VerificationToken {
 
 model VideoSummary {
   id               String   @id @default(cuid())
-  userId           String // Links to User model
+  userId           String  // Links to User model
   videoId          String   @unique // YouTube video ID
   videoTitle       String
   videoUrl         String
@@ -78,4 +78,20 @@ model VideoSummary {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Fix relation: explicitly name it and refer to it correctly in ChatMessage
+  chats ChatMessage[] @relation("VideoChat")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())  
+  userId    String
+  videoId   String
+  messages  Json // Store messages as an array of objects (JSON)
+  createdAt DateTime @default(now())
+
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ensure this relation correctly references VideoSummary's videoId
+  video     VideoSummary @relation(fields: [videoId], references: [videoId], onDelete: Cascade, name: "VideoChat")
 }
