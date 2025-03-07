@@ -2,6 +2,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { redirect, useParams } from "next/navigation";
+import { NextResponse } from "next/server";
 
 export default function VideoChatPage({
   params,
@@ -17,23 +18,28 @@ export default function VideoChatPage({
     if (status === "unauthenticated") {
       redirect("/");
     }
-  }, [status, redirect]);
+  }, [status]);
 
   if (status === "loading") {
     return <p>Loading...</p>;
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault(); // Prevent default form behavior
+        e.preventDefault(); 
 
         if (!userQuestion.trim()) {
             alert("Please enter a question.");
             return;
         }
 
-        setIsLoading(true); // Start loading state
+        console.log(JSON.stringify({
+          videoId,
+          userMessage: userQuestion,
+          userId: session?.user?.id,
+      }),);
+        
+        setIsLoading(true);
         try {
-            // Send the user's question to the backend
             const response = await fetch("/api/chat", {
                 method: "POST",
                 headers: {
@@ -47,18 +53,16 @@ export default function VideoChatPage({
             });
 
             if (!response.ok) {
-                throw new Error("Failed to send message");
+              throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const data = await response.json();
-            console.log("Backend Response:", data);
 
-            // Clear the input field after successful submission
+            const data = await response.json();
             setUserQuestion("");
         } catch (error) {
             console.error("Error submitting question:", error);
             alert("An error occurred while sending your question.");
         } finally {
-            setIsLoading(false); // End loading state
+            setIsLoading(false);
         }
     }
 

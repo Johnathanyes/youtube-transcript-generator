@@ -1,40 +1,71 @@
-import { auth } from "@/auth";
-import { prisma } from "@/prisma";
 import { NextResponse } from "next/server";
+import { prisma } from "@/prisma";
+import { auth } from "@/auth";
+import { OpenAI } from "openai";
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(req: Request) {
-    try {
-        const session = await auth();
-        if (!session || !session.user?.email) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+  try {
+    const { videoId, userMessage, userId } = await req.json();
 
-        const { videoId, message } = await req.json();
-        if (!videoId || !message) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-        }
-
-        // Check if the user owns this video summary
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: "User not found" }, { status: 404 });
-        }
-
-        const videoSummary = await prisma.videoSummary.findUnique({
-            where: { videoId, userId: user.id },
-        });
-
-        if (!videoSummary) {
-            return NextResponse.json({ error: "Access Denied" }, { status: 403 });
-        }
-
-        return NextResponse.json({ message: "User authenticated and authorized" }, { status: 200 });
-
-    } catch (error) {
-        console.error("Authentication error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    if (!videoId || !userMessage || !userId) {
+      return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
+
+    // Authenticate user
+    const session = await auth();
+    if (!session || session.user?.id !== userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Retrieve transcript chunks
+    const video = await prisma.videoSummary.findUnique({
+      where: { videoId },
+    });
+
+    if (!video) {
+      return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    }
+    
+    // Send user question + transcript chunks to ChatGPT
+    const chatResponse = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: `You are an AI answering based on a video's transcript.` },
+        { role: "user", content: `Transcript Chunks:\n${video.transcriptChunks.join("\n")}\nUser: ${userMessage}` },
+      ],
+    });
+
+    const chatGptResponse = chatResponse.choices[0]?.message.content?.trim();
+    if (!chatGptResponse) {
+      return NextResponse.json({ error: "Failed to generate response" }, { status: 500 });
+    }
+    // Store user message
+    await prisma.chatMessage.create({
+      data: {
+        userId,
+        videoId,
+        messages: JSON.stringify([{ sender: "user", text: userMessage }]),
+      },
+    });
+    
+    // Store ChatGPT response
+    await prisma.chatMessage.create({
+      data: {
+        userId,
+        videoId,
+        messages: JSON.stringify([{ sender: "chatgpt", text: chatGptResponse }]),
+      },
+    });
+    
+    return NextResponse.json({ chatGptResponse }, { status: 200 });
+
+  } catch (error) {
+    console.log("Chat API Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

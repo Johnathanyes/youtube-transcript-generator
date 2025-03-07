@@ -21,7 +21,7 @@ const VideoCard = ({videoData}: any) => {
         />
       </CardBody>
       <Button color="default" variant="shadow">
-        <Link href={`/videos/${videoData.id}`}>
+        <Link href={`/videos/${videoData.videoId}`}>
           Open Video
         </Link>
       </Button>

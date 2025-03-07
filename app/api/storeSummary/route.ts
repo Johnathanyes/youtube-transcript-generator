@@ -1,24 +1,24 @@
 import type { NextApiResponse } from 'next'
 import { prisma } from '@/prisma'
 import { auth } from '@/auth';
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request, res: NextApiResponse) {
+export async function POST(req: Request, res: NextResponse) {
     if (req.method !== "POST") {
-        return res.status(405).json({ error: "Method Not Allowed" });
+        return NextResponse.json({ error: "Method Not Allowed" }, { status: 403});
     }
 
     try {
-
         const session = await auth();
         if (!session || !session.user?.email) {
-          return res.status(401).json({ error: "Unauthorized" });
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const body = await req.json();
         const { videoId, videoTitle, videoUrl, videoChannel, videoThumbnail, summary, transcriptChunks } = body;
         
         if (!videoId || !videoTitle || !videoUrl) {
-          return res.status(400).json({ error: "Missing required fields" });
+          return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
         // Retrieve the authenticated user's ID
@@ -27,7 +27,7 @@ export async function POST(req: Request, res: NextApiResponse) {
         });
     
         if (!user) {
-          return res.status(404).json({ error: "User not found" });
+          return NextResponse.json({ error: "User not found" }, { status: 404} );
         }
     
         // Store the video summary in the database
@@ -43,9 +43,8 @@ export async function POST(req: Request, res: NextApiResponse) {
             transcriptChunks,
           },
         });
-        return res.status(200).json({ message: "Video summary saved successfully", videoSummary });
+        return NextResponse.json({ message: "Video summary saved successfully", videoSummary }, { status: 200 });
       } catch (error) {
-        console.log("Error storing video summary:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500});
       }
 }

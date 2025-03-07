@@ -86,7 +86,7 @@ model VideoSummary {
 model ChatMessage {
   id        String   @id @default(cuid())  
   userId    String
-  videoId   String
+  videoId   String   
   messages  Json // Store messages as an array of objects (JSON)
   createdAt DateTime @default(now())
 

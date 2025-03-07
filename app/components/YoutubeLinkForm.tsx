@@ -30,12 +30,12 @@ export default function YouTubeLinkForm() {
       }
       setLink(form_link);
 
-      const transcript = "asdfasdfasdf";
-      const chunkedTranscript = ["asdf", "asdfadsf"];
+      const transcript = await getTranscript(form_link);
+      const chunkedTranscript = await chunkTranscript(transcript);
 
       const youtubeId = await retrieveVideoId(form_link);
       const youtubeData = await getVideoData(youtubeId);
-      const summary = "baka";
+      const summary = await generateSummary(chunkedTranscript);
 
       if (!youtubeData) {
         setError("Failed to retrieve YouTube video data.");
