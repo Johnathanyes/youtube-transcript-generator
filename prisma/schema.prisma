@@ -87,7 +87,7 @@ model ChatMessage {
   id        String   @id @default(cuid())  
   userId    String
   videoId   String   
-  messages  Json // Store messages as an array of objects (JSON)
+  message  Json // Store messages as an array of objects (JSON)
   createdAt DateTime @default(now())
 
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)

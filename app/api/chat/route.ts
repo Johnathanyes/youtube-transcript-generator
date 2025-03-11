@@ -39,28 +39,36 @@ export async function POST(req: Request) {
         { role: "user", content: `Transcript Chunks:\n${video.transcriptChunks.join("\n")}\nUser: ${userMessage}` },
       ],
     });
+    console.log("get chatgpt response");
+    
 
     const chatGptResponse = chatResponse.choices[0]?.message.content?.trim();
     if (!chatGptResponse) {
       return NextResponse.json({ error: "Failed to generate response" }, { status: 500 });
     }
+    console.log("there is chatgpt response");
+    
     // Store user message
     await prisma.chatMessage.create({
       data: {
         userId,
         videoId,
-        messages: JSON.stringify([{ sender: "user", text: userMessage }]),
+        message: { sender: "user", text: userMessage },
       },
     });
+    console.log("created user chat");
+    
     
     // Store ChatGPT response
     await prisma.chatMessage.create({
       data: {
         userId,
         videoId,
-        messages: JSON.stringify([{ sender: "chatgpt", text: chatGptResponse }]),
+        message: { sender: "chatgpt", text: chatGptResponse },
       },
     });
+
+    console.log("created chatgpt chat");
     
     return NextResponse.json({ chatGptResponse }, { status: 200 });
 
